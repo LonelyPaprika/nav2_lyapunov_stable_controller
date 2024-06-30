@@ -107,7 +107,7 @@ geometry_msgs::msg::TwistStamped LyapunovStableController::computeVelocityComman
 
     checkCollision(pose, cmd);
 
-    return generateTwistMsg(pose, cmd);
+    return generateTwistMsg(pose.header.frame_id, cmd);
 }
 
 geometry_msgs::msg::Pose LyapunovStableController::selectGoal(const nav_msgs::msg::Path& transformed_plan) {
@@ -121,8 +121,9 @@ geometry_msgs::msg::Pose LyapunovStableController::selectGoal(const nav_msgs::ms
     }
     return goal_pose_it->pose;
 }
-CmdVelocity LyapunovStableController::computeVelocity(const geometry_msgs::msg::Pose& goal_pose) {
-    auto cmd = CmdVelocity();
+geometry_msgs::msg::Twist LyapunovStableController::computeVelocity(
+    const geometry_msgs::msg::Pose& goal_pose) {
+    auto cmd = geometry_msgs::msg::Twist();
 
     auto k_p = 1.0;
     auto k_d = 3.0;
@@ -131,35 +132,35 @@ CmdVelocity LyapunovStableController::computeVelocity(const geometry_msgs::msg::
 
     if (goal_pose.position.x > 0) {
         if (std::abs(angle_error) < max_angular_drift_) {
-            cmd.linear_vel = desired_linear_vel_ * std::cos(angle_error);
-            cmd.angular_vel = -k_p * goal_pose.position.y + k_d * angle_error;
+            cmd.linear.x = desired_linear_vel_ * std::cos(angle_error);
+            cmd.angular.z = -k_p * goal_pose.position.y + k_d * angle_error;
         } else {
-            cmd.linear_vel = 0.0;
-            cmd.angular_vel = max_angular_vel_ * sign(angle_error);
+            cmd.linear.x = 0.0;
+            cmd.angular.z = max_angular_vel_ * sign(angle_error);
         }
 
     } else {
-        cmd.linear_vel = 0.0;
-        cmd.angular_vel = max_angular_vel_ * sign(angle_error);
+        cmd.linear.x = 0.0;
+        cmd.angular.z = max_angular_vel_ * sign(angle_error);
     }
 
     return cmd;
 }
 
 void LyapunovStableController::checkCollision(const geometry_msgs::msg::PoseStamped& pose,
-                                              const CmdVelocity& cmd) {
-    if (use_collision_detection_ && isCollisionImminent(pose, cmd.linear_vel, cmd.angular_vel, 1.0)) {
+                                              const geometry_msgs::msg::Twist& cmd) {
+    if (use_collision_detection_ && isCollisionImminent(pose, cmd.linear.x, cmd.angular.z, 1.0)) {
         throw nav2_core::PlannerException("LyapunovStableController detected collision ahead!");
     }
 }
 
 geometry_msgs::msg::TwistStamped LyapunovStableController::generateTwistMsg(
-    const geometry_msgs::msg::PoseStamped& pose, const CmdVelocity& cmd) {
+    const std_msgs::msg::Header::_frame_id_type& frame_id, const geometry_msgs::msg::Twist& cmd) {
     geometry_msgs::msg::TwistStamped cmd_vel;
-    cmd_vel.header.frame_id = pose.header.frame_id;
+    cmd_vel.header.frame_id = frame_id;
     cmd_vel.header.stamp = clock_->now();
-    cmd_vel.twist.linear.x = cmd.linear_vel;
-    cmd_vel.twist.angular.z = max(-1.0 * abs(max_angular_vel_), min(cmd.angular_vel, abs(max_angular_vel_)));
+    cmd_vel.twist.linear.x = cmd.linear.x;
+    cmd_vel.twist.angular.z = max(-1.0 * abs(max_angular_vel_), min(cmd.angular.z, abs(max_angular_vel_)));
     return cmd_vel;
 }
 

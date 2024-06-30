@@ -12,6 +12,7 @@ set(DEPENDENCIES
   tf2
   rclcpp
   geometry_msgs
+  std_msgs
   nav_msgs
   pluginlib
 )

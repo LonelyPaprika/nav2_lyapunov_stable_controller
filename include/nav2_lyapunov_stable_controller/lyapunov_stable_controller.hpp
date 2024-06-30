@@ -19,7 +19,6 @@
 #include <memory>
 #include <string>
 
-#include "cmd_velocity.hpp"
 #include "nav2_core/controller.hpp"
 #include "nav2_core/exceptions.hpp"
 #include "nav2_costmap_2d/footprint_collision_checker.hpp"
@@ -28,6 +27,7 @@
 #include "nav_2d_utils/tf_help.hpp"
 #include "pluginlib/class_list_macros.hpp"
 #include "pluginlib/class_loader.hpp"
+#include "std_msgs/msg/header.hpp"
 #include "utils.hpp"
 
 using std::abs;
@@ -60,15 +60,18 @@ class LyapunovStableController : public nav2_core::Controller {
 
    protected:
     nav_msgs::msg::Path transformGlobalPlan(const geometry_msgs::msg::PoseStamped& pose);
-
-    CmdVelocity computeVelocity(const geometry_msgs::msg::Pose& goal_pose);
-
-    geometry_msgs::msg::TwistStamped generateTwistMsg(const geometry_msgs::msg::PoseStamped& pose,
-                                                      const CmdVelocity& cmd);
-
-    void checkCollision(const geometry_msgs::msg::PoseStamped& pose, const CmdVelocity& cmd);
-
     geometry_msgs::msg::Pose selectGoal(const nav_msgs::msg::Path& transformed_plan);
+    geometry_msgs::msg::Twist computeVelocity(const geometry_msgs::msg::Pose& goal_pose);
+    void checkCollision(const geometry_msgs::msg::PoseStamped& pose, const geometry_msgs::msg::Twist& cmd);
+
+    /**
+     * @brief Whether collision is imminent
+     * @param frame_id frame of the Twist Msg
+     * @param cmd object which contains the linear vel and the angular vel.
+     * @return Cmd
+     */
+    geometry_msgs::msg::TwistStamped generateTwistMsg(const std_msgs::msg::Header::_frame_id_type& frame_id,
+                                                      const geometry_msgs::msg::Twist& cmd);
 
     /**
      * @brief Whether collision is imminent

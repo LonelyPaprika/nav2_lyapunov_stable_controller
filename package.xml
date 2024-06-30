@@ -18,6 +18,7 @@
   <depend>tf2</depend>
   <depend>rclcpp</depend>
   <depend>geometry_msgs</depend>
+  <depend>std_msgs</depend>
   <depend>pluginlib</depend>
 
   <exec_depend>nav2_bringup</exec_depend>
