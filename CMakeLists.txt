@@ -1,19 +1,23 @@
 cmake_minimum_required(VERSION 3.8)
 project(nav2_lyapunov_stable_controller)
 
-find_package(ament_cmake REQUIRED)
-find_package(nav2_common REQUIRED)
-find_package(nav2_core REQUIRED)
-find_package(nav2_costmap_2d REQUIRED)
-find_package(nav2_util REQUIRED)
-find_package(nav_2d_utils REQUIRED)
-
-find_package(tf2 REQUIRED)
-
-find_package(rclcpp REQUIRED)
-find_package(geometry_msgs REQUIRED)
-find_package(nav_msgs REQUIRED)
-find_package(pluginlib REQUIRED)
+# find dependencies
+set(DEPENDENCIES
+  ament_cmake
+  nav2_common
+  nav2_core
+  nav2_costmap_2d
+  nav2_util
+  nav_2d_utils
+  tf2
+  rclcpp
+  geometry_msgs
+  nav_msgs
+  pluginlib
+)
+foreach(Dependency IN ITEMS ${DEPENDENCIES})
+  find_package(${Dependency} REQUIRED)
+endforeach()
 
 nav2_package()
 
@@ -21,26 +25,14 @@ include_directories(
   include
 )
 
-set(dependencies
-  rclcpp
-  geometry_msgs
-  nav2_costmap_2d
-  pluginlib
-  nav_msgs
-  nav2_util
-  nav2_core
-  nav_2d_utils
-  tf2
-)
-
 add_library(nav2_lyapunov_stable_controller SHARED
         src/lyapunov_stable_controller.cpp)
 
 # prevent pluginlib from using boost
-target_compile_definitions(nav2_lyapunov_stable_controller PUBLIC "PLUGINLIB__DISABLE_BOOST_FUNCTIONS")    
+target_compile_definitions(nav2_lyapunov_stable_controller PUBLIC "PLUGINLIB__DISABLE_BOOST_FUNCTIONS")
 
 ament_target_dependencies(nav2_lyapunov_stable_controller
-  ${dependencies}
+  ${DEPENDENCIES}
 )
 
 install(TARGETS nav2_lyapunov_stable_controller
@@ -54,12 +46,17 @@ install(DIRECTORY include/
 )
 
 if(BUILD_TESTING)
-  
+  find_package(ament_cmake_lint_cmake REQUIRED)
+  ament_lint_cmake()
+  find_package(ament_cmake_cpplint REQUIRED)
+  ament_cpplint(
+  MAX_LINE_LENGTH 110
+  )
 endif()
 
 ament_export_include_directories(include)
 ament_export_libraries(nav2_lyapunov_stable_controller)
-ament_export_dependencies(${dependencies})
+ament_export_dependencies(${DEPENDENCIES})
 
 pluginlib_export_plugin_description_file(nav2_core nav2_lyapunov_stable_controller.xml)
 
