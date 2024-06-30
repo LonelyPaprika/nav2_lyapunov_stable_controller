@@ -128,12 +128,12 @@ CmdVelocity LyapunovStableController::computeVelocity(const geometry_msgs::msg::
             cmd.angular_vel = -k_p * goal_pose.position.y + k_d * angle_error;
         } else {
             cmd.linear_vel = 0.0;
-            cmd.angular_vel = max_angular_vel_ * nav2_lyapunov_stable_controller::sign(angle_error);
+            cmd.angular_vel = max_angular_vel_ * sign(angle_error);
         }
 
     } else {
         cmd.linear_vel = 0.0;
-        cmd.angular_vel = max_angular_vel_ * nav2_lyapunov_stable_controller::sign(angle_error);
+        cmd.angular_vel = max_angular_vel_ * sign(angle_error);
     }
 
     return cmd;

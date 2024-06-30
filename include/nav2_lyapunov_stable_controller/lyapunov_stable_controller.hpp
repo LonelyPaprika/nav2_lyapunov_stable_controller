@@ -10,6 +10,7 @@
 
 #include <cmath>
 
+#include "cmd_velocity.hpp"
 #include "nav2_core/controller.hpp"
 #include "nav2_core/exceptions.hpp"
 #include "nav2_costmap_2d/footprint_collision_checker.hpp"
@@ -26,11 +27,6 @@ using std::max;
 using std::min;
 
 namespace nav2_lyapunov_stable_controller {
-
-struct CmdVelocity {
-    double linear_vel;
-    double angular_vel;
-};
 
 class LyapunovStableController : public nav2_core::Controller {
    public:
