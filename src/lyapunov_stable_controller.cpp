@@ -107,7 +107,7 @@ geometry_msgs::msg::TwistStamped LyapunovStableController::computeVelocityComman
 
     checkCollision(pose, cmd);
 
-    return generateTwistMsg(pose.header.frame_id, cmd);
+    return generateTwistStampedMsg(pose.header.frame_id, cmd);
 }
 
 geometry_msgs::msg::Pose LyapunovStableController::selectGoal(const nav_msgs::msg::Path& transformed_plan) {
@@ -121,19 +121,20 @@ geometry_msgs::msg::Pose LyapunovStableController::selectGoal(const nav_msgs::ms
     }
     return goal_pose_it->pose;
 }
+
 geometry_msgs::msg::Twist LyapunovStableController::computeVelocity(
     const geometry_msgs::msg::Pose& goal_pose) {
     auto cmd = geometry_msgs::msg::Twist();
 
-    auto k_p = 1.0;
-    auto k_d = 3.0;
+    auto k_lin = 1.0;
+    auto k_ang = 3.0;
 
     auto angle_error = std::atan2(goal_pose.position.y, goal_pose.position.x);
 
     if (goal_pose.position.x > 0) {
         if (std::abs(angle_error) < max_angular_drift_) {
             cmd.linear.x = desired_linear_vel_ * std::cos(angle_error);
-            cmd.angular.z = -k_p * goal_pose.position.y + k_d * angle_error;
+            cmd.angular.z = -k_lin * goal_pose.position.y + k_ang * angle_error;
         } else {
             cmd.linear.x = 0.0;
             cmd.angular.z = max_angular_vel_ * sign(angle_error);
@@ -154,7 +155,7 @@ void LyapunovStableController::checkCollision(const geometry_msgs::msg::PoseStam
     }
 }
 
-geometry_msgs::msg::TwistStamped LyapunovStableController::generateTwistMsg(
+geometry_msgs::msg::TwistStamped LyapunovStableController::generateTwistStampedMsg(
     const std_msgs::msg::Header::_frame_id_type& frame_id, const geometry_msgs::msg::Twist& cmd) {
     geometry_msgs::msg::TwistStamped cmd_vel;
     cmd_vel.header.frame_id = frame_id;

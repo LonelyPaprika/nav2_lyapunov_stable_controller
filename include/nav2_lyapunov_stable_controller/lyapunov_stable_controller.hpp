@@ -59,19 +59,42 @@ class LyapunovStableController : public nav2_core::Controller {
                                                              nav2_core::GoalChecker* goal_checker) override;
 
    protected:
+    /**
+     * @brief Transform the plan in the robot's frame of reference.
+     * @param pose robot's pose
+     * @return transformed plan
+     */
     nav_msgs::msg::Path transformGlobalPlan(const geometry_msgs::msg::PoseStamped& pose);
+
+    /**
+     * @brief Select the next goal of the robot
+     * @param transformed_plan
+     * @return pose of the goal
+     */
     geometry_msgs::msg::Pose selectGoal(const nav_msgs::msg::Path& transformed_plan);
+
+    /**
+     * @brief Compute cmd to reach goal_pose
+     * @param goal_pose goal pose
+     * @return cmd Twist
+     */
     geometry_msgs::msg::Twist computeVelocity(const geometry_msgs::msg::Pose& goal_pose);
+
+    /**
+     * @brief Check collision
+     * @param pose robot's pose
+     * @param cmd velocity cmd sent to the robot
+     */
     void checkCollision(const geometry_msgs::msg::PoseStamped& pose, const geometry_msgs::msg::Twist& cmd);
 
     /**
-     * @brief Whether collision is imminent
+     * @brief Generate TwistStamped Msg from Twist Msg
      * @param frame_id frame of the Twist Msg
      * @param cmd object which contains the linear vel and the angular vel.
-     * @return Cmd
+     * @return cmd TwistStamped
      */
-    geometry_msgs::msg::TwistStamped generateTwistMsg(const std_msgs::msg::Header::_frame_id_type& frame_id,
-                                                      const geometry_msgs::msg::Twist& cmd);
+    geometry_msgs::msg::TwistStamped generateTwistStampedMsg(
+        const std_msgs::msg::Header::_frame_id_type& frame_id, const geometry_msgs::msg::Twist& cmd);
 
     /**
      * @brief Whether collision is imminent
