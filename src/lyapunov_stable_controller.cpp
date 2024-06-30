@@ -43,6 +43,8 @@ void LyapunovStableController::configure(const rclcpp_lifecycle::LifecycleNode::
                                       rclcpp::ParameterValue(true));
     declare_parameter_if_not_declared(node, plugin_name_ + ".max_allowed_time_to_collision",
                                       rclcpp::ParameterValue(1.0));
+    declare_parameter_if_not_declared(node, plugin_name_ + ".k_linear", rclcpp::ParameterValue(1.0));
+    declare_parameter_if_not_declared(node, plugin_name_ + ".k_angular", rclcpp::ParameterValue(3.0));
 
     double transform_tolerance;
     node->get_parameter(plugin_name_ + ".transform_tolerance", transform_tolerance);
@@ -53,6 +55,8 @@ void LyapunovStableController::configure(const rclcpp_lifecycle::LifecycleNode::
     node->get_parameter(plugin_name_ + ".max_angular_drift", max_angular_drift_);
     node->get_parameter(plugin_name_ + ".use_collision_detection", use_collision_detection_);
     node->get_parameter(plugin_name_ + ".max_allowed_time_to_collision", max_allowed_time_to_collision_);
+    node->get_parameter(plugin_name_ + ".k_linear", k_linear_);
+    node->get_parameter(plugin_name_ + ".k_angular", k_angular_);
 
     global_pub_ = node->create_publisher<nav_msgs::msg::Path>("received_global_plan", 1);
 
@@ -126,15 +130,12 @@ geometry_msgs::msg::Twist LyapunovStableController::computeVelocity(
     const geometry_msgs::msg::Pose& goal_pose) {
     auto cmd = geometry_msgs::msg::Twist();
 
-    auto k_lin = 1.0;
-    auto k_ang = 3.0;
-
     auto angle_error = std::atan2(goal_pose.position.y, goal_pose.position.x);
 
     if (goal_pose.position.x > 0) {
         if (std::abs(angle_error) < max_angular_drift_) {
             cmd.linear.x = desired_linear_vel_ * std::cos(angle_error);
-            cmd.angular.z = -k_lin * goal_pose.position.y + k_ang * angle_error;
+            cmd.angular.z = -k_linear_ * goal_pose.position.y + k_angular_ * angle_error;
         } else {
             cmd.linear.x = 0.0;
             cmd.angular.z = max_angular_vel_ * sign(angle_error);

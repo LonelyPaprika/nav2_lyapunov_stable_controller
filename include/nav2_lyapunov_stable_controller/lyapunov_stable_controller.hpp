@@ -132,6 +132,8 @@ class LyapunovStableController : public nav2_core::Controller {
     rclcpp::Duration transform_tolerance_{0, 0};
     bool use_collision_detection_;
     double max_allowed_time_to_collision_;
+    double k_linear_;
+    double k_angular_;
 
     nav_msgs::msg::Path global_plan_;
     std::shared_ptr<rclcpp_lifecycle::LifecyclePublisher<nav_msgs::msg::Path>> global_pub_;
