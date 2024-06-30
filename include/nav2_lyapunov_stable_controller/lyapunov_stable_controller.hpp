@@ -5,8 +5,8 @@
  *
  */
 
-#ifndef NAV2_STABLE_CONTROLLER__STABLE_CONTROLLER_HPP_
-#define NAV2_STABLE_CONTROLLER__STABLE_CONTROLLER_HPP_
+#ifndef NAV2_LYAPUNOV_STABLE_CONTROLLER__LYAPUNOV_STABLE_CONTROLLER_HPP_
+#define NAV2_LYAPUNOV_STABLE_CONTROLLER__LYAPUNOV_STABLE_CONTROLLER_HPP_
 
 #include <cmath>
 
@@ -15,25 +15,27 @@
 #include "nav2_costmap_2d/footprint_collision_checker.hpp"
 #include "nav2_util/geometry_utils.hpp"
 #include "nav2_util/node_utils.hpp"
+#include "nav_2d_utils/tf_help.hpp"
 #include "pluginlib/class_list_macros.hpp"
 #include "pluginlib/class_loader.hpp"
+#include "utils.hpp"
 
 using std::abs;
 using std::hypot;
 using std::max;
 using std::min;
 
-namespace nav2_stable_controller {
+namespace nav2_lyapunov_stable_controller {
 
 struct CmdVelocity {
     double linear_vel;
     double angular_vel;
 };
 
-class StableController : public nav2_core::Controller {
+class LyapunovStableController : public nav2_core::Controller {
    public:
-    StableController() = default;
-    ~StableController() override = default;
+    LyapunovStableController() = default;
+    ~LyapunovStableController() override = default;
 
     void configure(const rclcpp_lifecycle::LifecycleNode::WeakPtr& parent, std::string name,
                    const std::shared_ptr<tf2_ros::Buffer> tf,
@@ -53,11 +55,6 @@ class StableController : public nav2_core::Controller {
 
    protected:
     nav_msgs::msg::Path transformGlobalPlan(const geometry_msgs::msg::PoseStamped& pose);
-
-    bool transformPose(const std::shared_ptr<tf2_ros::Buffer> tf, const std::string frame,
-                       const geometry_msgs::msg::PoseStamped& in_pose,
-                       geometry_msgs::msg::PoseStamped& out_pose,
-                       const rclcpp::Duration& transform_tolerance) const;
 
     CmdVelocity computeVelocity(const geometry_msgs::msg::Pose& goal_pose);
 
@@ -94,7 +91,7 @@ class StableController : public nav2_core::Controller {
     std::string plugin_name_;
     std::shared_ptr<nav2_costmap_2d::Costmap2DROS> costmap_ros_;
     nav2_costmap_2d::Costmap2D* costmap_;
-    rclcpp::Logger logger_{rclcpp::get_logger("StableController")};
+    rclcpp::Logger logger_{rclcpp::get_logger("LyapunovStableController")};
     rclcpp::Clock::SharedPtr clock_;
 
     double desired_linear_vel_;
@@ -110,6 +107,6 @@ class StableController : public nav2_core::Controller {
     std::unique_ptr<nav2_costmap_2d::FootprintCollisionChecker<nav2_costmap_2d::Costmap2D*>>
         collision_checker_;
 };
-}  // namespace nav2_stable_controller
+}  // namespace nav2_lyapunov_stable_controller
 
-#endif  // NAV2_STABLE_CONTROLLER__STABLE_CONTROLLER_HPP_
+#endif  // NAV2_LYAPUNOV_STABLE_CONTROLLER__LYAPUNOV_STABLE_CONTROLLER_HPP_

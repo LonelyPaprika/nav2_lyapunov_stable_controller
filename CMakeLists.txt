@@ -1,11 +1,12 @@
 cmake_minimum_required(VERSION 3.8)
-project(nav2_stable_controller)
+project(nav2_lyapunov_stable_controller)
 
 find_package(ament_cmake REQUIRED)
 find_package(nav2_common REQUIRED)
 find_package(nav2_core REQUIRED)
 find_package(nav2_costmap_2d REQUIRED)
 find_package(nav2_util REQUIRED)
+find_package(nav_2d_utils REQUIRED)
 
 find_package(tf2 REQUIRED)
 
@@ -28,20 +29,21 @@ set(dependencies
   nav_msgs
   nav2_util
   nav2_core
+  nav_2d_utils
   tf2
 )
 
-add_library(nav2_stable_controller SHARED
-        src/stable_controller.cpp)
+add_library(nav2_lyapunov_stable_controller SHARED
+        src/lyapunov_stable_controller.cpp)
 
 # prevent pluginlib from using boost
-target_compile_definitions(nav2_stable_controller PUBLIC "PLUGINLIB__DISABLE_BOOST_FUNCTIONS")    
+target_compile_definitions(nav2_lyapunov_stable_controller PUBLIC "PLUGINLIB__DISABLE_BOOST_FUNCTIONS")    
 
-ament_target_dependencies(nav2_stable_controller
+ament_target_dependencies(nav2_lyapunov_stable_controller
   ${dependencies}
 )
 
-install(TARGETS nav2_stable_controller
+install(TARGETS nav2_lyapunov_stable_controller
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
@@ -56,9 +58,9 @@ if(BUILD_TESTING)
 endif()
 
 ament_export_include_directories(include)
-ament_export_libraries(nav2_stable_controller)
+ament_export_libraries(nav2_lyapunov_stable_controller)
 ament_export_dependencies(${dependencies})
 
-pluginlib_export_plugin_description_file(nav2_core nav2_stable_controller.xml)
+pluginlib_export_plugin_description_file(nav2_core nav2_lyapunov_stable_controller.xml)
 
 ament_package()
