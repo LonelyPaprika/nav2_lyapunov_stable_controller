@@ -125,6 +125,8 @@ class LyapunovStableController : public nav2_core::Controller {
     rclcpp::Logger logger_{rclcpp::get_logger("LyapunovStableController")};
     rclcpp::Clock::SharedPtr clock_;
 
+    geometry_msgs::msg::Pose pose_tolerance_;
+    geometry_msgs::msg::Twist vel_tolerance_;
     double desired_linear_vel_;
     double lookahead_dist_;
     double max_angular_vel_;
@@ -134,6 +136,7 @@ class LyapunovStableController : public nav2_core::Controller {
     double max_allowed_time_to_collision_;
     double k_linear_;
     double k_angular_;
+    double goal_is_last_;
 
     nav_msgs::msg::Path global_plan_;
     std::shared_ptr<rclcpp_lifecycle::LifecyclePublisher<nav_msgs::msg::Path>> global_pub_;

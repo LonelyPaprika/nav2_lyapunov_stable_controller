@@ -105,6 +105,8 @@ geometry_msgs::msg::TwistStamped LyapunovStableController::computeVelocityComman
     (void)velocity;
     (void)goal_checker;
 
+    goal_checker->getTolerances(pose_tolerance_, vel_tolerance_);
+
     auto goal_pose = selectGoal(transformGlobalPlan(pose));
 
     auto cmd = computeVelocity(goal_pose);
@@ -115,12 +117,14 @@ geometry_msgs::msg::TwistStamped LyapunovStableController::computeVelocityComman
 }
 
 geometry_msgs::msg::Pose LyapunovStableController::selectGoal(const nav_msgs::msg::Path& transformed_plan) {
+    goal_is_last_ = false;
     auto goal_pose_it = std::find_if(
         transformed_plan.poses.begin(), transformed_plan.poses.end(),
         [&](const auto& ps) { return hypot(ps.pose.position.x, ps.pose.position.y) >= lookahead_dist_; });
 
     // If the last pose is still within lookahed distance, take the last pose
     if (goal_pose_it == transformed_plan.poses.end()) {
+        goal_is_last_ = true;
         goal_pose_it = std::prev(transformed_plan.poses.end());
     }
     return goal_pose_it->pose;
@@ -128,22 +132,41 @@ geometry_msgs::msg::Pose LyapunovStableController::selectGoal(const nav_msgs::ms
 
 geometry_msgs::msg::Twist LyapunovStableController::computeVelocity(
     const geometry_msgs::msg::Pose& goal_pose) {
+    auto rotateOnly = [](geometry_msgs::msg::Twist& cmd, const double& max_angular_vel,
+                         const double& angle_error) {
+        cmd.linear.x = 0.0;
+        cmd.angular.z = max_angular_vel * sign(angle_error);
+    };
+
     auto cmd = geometry_msgs::msg::Twist();
 
     auto angle_error = std::atan2(goal_pose.position.y, goal_pose.position.x);
 
-    if (goal_pose.position.x > 0) {
-        if (std::abs(angle_error) < max_angular_drift_) {
-            cmd.linear.x = desired_linear_vel_ * std::cos(angle_error);
-            cmd.angular.z = -k_linear_ * goal_pose.position.y + k_angular_ * angle_error;
-        } else {
-            cmd.linear.x = 0.0;
-            cmd.angular.z = max_angular_vel_ * sign(angle_error);
-        }
+    // align with goal pose yaw
+    // if the goal is the last point of the path
+    // and the translation error is smaller than the pose tolerance,
+    // we align with the goal pose yaw.
 
-    } else {
-        cmd.linear.x = 0.0;
-        cmd.angular.z = max_angular_vel_ * sign(angle_error);
+    if (goal_is_last_ &&
+        abs(hypot(goal_pose.position.x, goal_pose.position.y)) < pose_tolerance_.position.x) {
+        tf2::Quaternion tf2_quat;
+        tf2::convert(goal_pose.orientation, tf2_quat);
+        rotateOnly(cmd, max_angular_vel_, tf2::getYaw(tf2_quat));
+    }
+
+    else {
+        // follow path
+
+        if (goal_pose.position.x > 0) {
+            if (std::abs(angle_error) < max_angular_drift_) {
+                cmd.linear.x = desired_linear_vel_ * std::cos(angle_error);
+                cmd.angular.z = -k_linear_ * goal_pose.position.y + k_angular_ * angle_error;
+            } else {
+                rotateOnly(cmd, max_angular_vel_, angle_error);
+            }
+        } else {
+            rotateOnly(cmd, max_angular_vel_, angle_error);
+        }
     }
 
     return cmd;
